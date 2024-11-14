@@ -1,8 +1,7 @@
 #define USE_ARDUINO_INTERRUPTS true    
 #include <PulseSensorPlayground.h>
-#include <PCM.h>
-
-const unsigned char danger_Signal[] PROGMEM = {};
+#include "VoiceRecognitionV3.h"
+#include <SoftwareSerial.h>
 
 const int PulseWire = 0;
 const int LED13 = 13;
@@ -13,14 +12,16 @@ int tmp_sensor = A1;
 float voltage;
 float temperatureC;
 
+uint8_t buf[64];
+
 const int sent_time = 10; // 센서 데이터 전달 속도(초)
 
-PulseSensorPlayground pulseSensor;
+VR myVR(2,3);
 
+PulseSensorPlayground pulseSensor;
 void setup() {
   Serial.begin(9600); // 출력
-  Serial1.begin(9600); // 블루투스
-  Serial2.begin(9600); // stt
+  myVR.begin(9600);
 
   pulseSensor.analogInput(PulseWire);   
   pulseSensor.blinkOnPulse(LED13);       
@@ -34,7 +35,7 @@ void setup() {
 }
 
 void loop() {
-  if(millis()%(sent_time*1000)){
+  if(millis()%(sent_time*1000)==0){
     value = analogRead(tmp_sensor); // 체온 체크
     voltage = value * 5.0 / 1023.0;
     temperatureC = voltage / 0.01;
@@ -54,7 +55,19 @@ void loop() {
     String send_data = String(myBPM) + " " + String(temperatureC); // 보낼 데이터
     sendInChunks(send_data);
   }
+  int ret = myVR.recognize(buf, 50);
+  if(ret>0){
+    switch(buf[1]){
+      case (0 )://도와줘
+        break;
+      case (1):
+        break;
+      default:
+        Serial.println("Record function undefined");
+        break;
+    }
   //startPlayback(danger_Signal, sizeof(danger_Signal)); tts 구현 : 지유 목소리 녹음 ㄱㄱ
+  }
 }
 
 void sendInChunks(String data) {
@@ -64,7 +77,7 @@ void sendInChunks(String data) {
   for (int i = 0; i < length; i += chunkSize) {
     String chunk = data.substring(i, i + chunkSize);
     
-    Serial1.print(chunk);
+    Serial.write(chunk);
     Serial.print("Sent chunk: ");
     Serial.println(chunk);
 
