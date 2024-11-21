@@ -51,8 +51,9 @@ void loop() {
     Serial.print("temperature :");
     Serial.print(temperatureC);
     Serial.println("C");
-
-    String send_data = String(myBPM) + " " + String(temperatureC); // 보낼 데이터
+    String send_temperatureC = (String(temperatureC).length()<3)? (String(temperatureC).length()<2) ? "00" + String(temperatureC): "0" + String(temperatureC): String(temperatureC);
+    String send_BPM = (String(myBPM).length()<3)? (String(myBPM).length()<2) ? "00" + String(myBPM): "0" + String(myBPM): String(myBPM);
+    String send_data = send_BPM + " " + send_temperatureC;
     sendInChunks(send_data);
   }
   int ret = myVR.recognize(buf, 50);
@@ -66,24 +67,21 @@ void loop() {
         Serial.println("Record function undefined");
         break;
     }
-  //startPlayback(danger_Signal, sizeof(danger_Signal)); tts 구현 : 지유 목소리 녹음 ㄱㄱ
   }
 }
 
 void sendInChunks(String data) {
-  int chunkSize = 64; // 보넬 비트 수(최대 64bit)
+  int chunkSize = 7;
   int length = data.length();
 
   for (int i = 0; i < length; i += chunkSize) {
     String chunk = data.substring(i, i + chunkSize);
     
-    Serial.write(chunk);
+    Serial.write(chunk.c_str()); 
     Serial.print("Sent chunk: ");
     Serial.println(chunk);
 
     delay(100);
   }
 }
-
-
 
