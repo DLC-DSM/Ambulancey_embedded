@@ -20,7 +20,7 @@ VR myVR(2,3);
 
 PulseSensorPlayground pulseSensor;
 void setup() {
-  Serial.begin(9600); // 출력
+  Serial.begin(9600);
   myVR.begin(9600);
 
   pulseSensor.analogInput(PulseWire);   
