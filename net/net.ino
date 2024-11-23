@@ -9,9 +9,11 @@ char server[] = "192.168.171.2";
 
 WiFiClient wifiClient;
 
-const int chunkSize = 7;
+const int chunkSize = 10;
 char buffer[chunkSize];
 int index = 0;
+
+String chunk = "000 000.00";
 
 void setup() {
   Serial.begin(9600);
@@ -54,18 +56,22 @@ void loop() {
     buffer[index++] = Serial.read();
     if (index >= chunkSize) {
       buffer[index] = '\0';
-      Serial.println("Received chunk:");
-      Serial.println(buffer);
-      index = 0;
+      chunk = String(buffer);
+      index = 0;                   
     }
   }
-  
+  if (wifiClient.connected()) {
+    wifiClient.println(chunk);
+  }
+
+
   if (!wifiClient.connected()) {
     Serial.println();
     Serial.println("disconnecting from server.");
     wifiClient.stop();
     while (true);
   }
+  delay(100);
 }
 
 void printWifiStatus() {
