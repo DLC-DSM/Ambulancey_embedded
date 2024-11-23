@@ -1,5 +1,10 @@
 #include <PCM.h>
 
+const int chunkSize = 2;
+String chunk;
+char buffer[chunkSize];
+int index = 0;
+
 const unsigned char a[] PROGMEM = {}; //tts
 
 void setup() {
@@ -7,10 +12,12 @@ void setup() {
 }
 
 void loop() {
-  if(Serial.available()){
-    String incomingData = mySerial.readString();
-    if(incomingData == "a"){
-      startPlayback(a, sizeof(a));
+  while (Serial.available() > 0) {
+    buffer[index++] = Serial.read();
+    if (index >= chunkSize) {
+      buffer[index] = '\0';
+      chunk = String(buffer);
+      index = 0;
     }
   }
 }

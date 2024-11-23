@@ -12,6 +12,8 @@ int tmp_sensor = A1;
 float voltage;
 float temperatureC;
 
+String speaker = 0;
+
 uint8_t buf[64];
 
 const int sent_time = 10; // 센서 데이터 전달 속도(초)
@@ -35,10 +37,11 @@ void setup() {
 }
 
 void loop() {
-  if(millis()%(sent_time*1000)==0){
+  if(true){
     value = analogRead(tmp_sensor); // 체온 체크
     voltage = value * 5.0 / 1023.0;
     temperatureC = voltage / 0.01;
+    temperatureC -= 13;
 
     int myBPM = pulseSensor.getBeatsPerMinute();
 
@@ -51,7 +54,7 @@ void loop() {
     Serial.print("temperature :");
     Serial.print(temperatureC);
     Serial.println("C");
-    String send_temperatureC = (String(temperatureC).length()<3)? (String(temperatureC).length()<2) ? "00" + String(temperatureC): "0" + String(temperatureC): String(temperatureC);
+    String send_temperatureC = (String(temperatureC).length()<5)? (String(temperatureC).length()<4) ? "00" + String(temperatureC): "0" + String(temperatureC): String(temperatureC);
     String send_BPM = (String(myBPM).length()<3)? (String(myBPM).length()<2) ? "00" + String(myBPM): "0" + String(myBPM): String(myBPM);
     String send_data = send_BPM + " " + send_temperatureC;
     sendInChunks(send_data);
@@ -71,7 +74,7 @@ void loop() {
 }
 
 void sendInChunks(String data) {
-  int chunkSize = 7;
+  int chunkSize = 10;
   int length = data.length();
 
   for (int i = 0; i < length; i += chunkSize) {
