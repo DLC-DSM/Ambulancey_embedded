@@ -15,6 +15,8 @@ int index = 0;
 
 String chunk = "000 000.00";
 
+uint8_t receive = 0;
+
 void setup() {
   Serial.begin(9600);
 
@@ -94,10 +96,10 @@ void read_response() {
   uint32_t received_data_num = 0;
   while (wifiClient.available()) {
     char c = wifiClient.read();
-    Serial.print(c);
-    received_data_num++;
-    if(received_data_num % 80 == 0) { 
-      Serial.println();
-    }
+    receive = static_cast<int>(c);
+  }
+  if(receive == 1){
+    Serial.write("E");
+    receive = 0;
   }
 }

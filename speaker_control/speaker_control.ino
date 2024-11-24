@@ -5,7 +5,13 @@ String chunk;
 char buffer[chunkSize];
 int index = 0;
 
-const unsigned char a[] PROGMEM = {}; //tts
+const unsigned char help[] PROGMEM = {}; //tts
+const unsigned char fuck_help[] PROGMEM = {};
+const unsigned char wtf_help[] PROGMEM = {};
+const unsigned char no[] PROGMEM = {};
+const unsigned char yes[] PROGMEM = {};
+const unsigned char sick[] PROGMEM = {};
+
 
 void setup() {
   Serial.begin(9600);
