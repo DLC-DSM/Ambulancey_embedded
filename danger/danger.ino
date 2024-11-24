@@ -12,13 +12,15 @@ int tmp_sensor = A1;
 float voltage;
 float temperatureC;
 
-String speaker = 0;
+bool yes_or_no;
+bool danger = false;
+
+char speaker[1];
 
 uint8_t buf[64];
 
-const int sent_time = 10; // 센서 데이터 전달 속도(초)
-
 VR myVR(2,3);
+SoftwareSerial SpeakerInstruct(4,5);
 
 PulseSensorPlayground pulseSensor;
 void setup() {
@@ -37,7 +39,13 @@ void setup() {
 }
 
 void loop() {
-  if(true){
+  if(Serial.available()>0){
+    char reads = Serial.read();
+    if(reads == '1'){
+      danger == true;
+    }
+  }
+  if(millis()%1000==0){
     value = analogRead(tmp_sensor); // 체온 체크
     voltage = value * 5.0 / 1023.0;
     temperatureC = voltage / 0.01;
@@ -62,15 +70,31 @@ void loop() {
   int ret = myVR.recognize(buf, 50);
   if(ret>0){
     switch(buf[1]){
-      case (0 )://도와줘
+      case (0)://도와줘
+        speaker[0] = 'h';
         break;
-      case (1):
+      case (1)://살려줘
+        speaker[0] = 'f';
         break;
-      default:
-        Serial.println("Record function undefined");
+      case (2)://구해줘
+        speaker[0] = 'w';
+        break;
+      case (3)://어
+        yes_or_no = true;
+        speaker[0] = 'y';
+        break;
+      case (4)://아니
+        yes_or_no = false;
+        speaker[0] = 'n';
+        break;
+      case (5)://아파
+        speaker[0] = 's';
         break;
     }
+    SpeakerInstruct.write(speaker);
+    Serial.println(speaker);
   }
+  delay(1000);
 }
 
 void sendInChunks(String data) {
