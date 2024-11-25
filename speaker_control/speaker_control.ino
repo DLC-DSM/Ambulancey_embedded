@@ -1,15 +1,10 @@
 #include <PCM.h>
 
-const int chunkSize = 2;
-String chunk;
-char buffer[chunkSize];
-int index = 0;
-
 const unsigned char help[] PROGMEM = {}; //tts
 const unsigned char fuck_help[] PROGMEM = {};
 const unsigned char wtf_help[] PROGMEM = {};
-const unsigned char no[] PROGMEM = {};
-const unsigned char yes[] PROGMEM = {};
+const unsigned char danger[] PROGMEM = {};//대답
+const unsigned char Q[] PROGMEM = {};//질문
 const unsigned char sick[] PROGMEM = {};
 
 
@@ -18,12 +13,27 @@ void setup() {
 }
 
 void loop() {
-  while (Serial.available() > 0) {
-    buffer[index++] = Serial.read();
-    if (index >= chunkSize) {
-      buffer[index] = '\0';
-      chunk = String(buffer);
-      index = 0;
+  if(Serial.available()){
+    String read_data = Serial.read();
+    switch (read_data) {
+    case 'h':
+      startPlayback(help, sizeof(help));
+      break;
+    case 'f':
+      startPlayback(fuck_help, sizeof(fuck_help));
+      break;
+    case 'w':
+      startPlayback(wtf_help, sizeof(wtf_help));
+      break;
+    case 't':
+      startPlayback(Q, sizeof(Q));
+      break;
+    case 'D':
+      startPlayback(danger, sizeof(danger));
+      break;
+    case 's':
+      startPlayback(sick, sizeof(sick));
+      break;
     }
   }
 }

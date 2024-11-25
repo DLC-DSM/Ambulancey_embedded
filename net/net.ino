@@ -2,7 +2,6 @@
 
 char ssid[] = " ";
 char pass[] = " ";
-int keyIndex = 0; 
 
 int status = WL_IDLE_STATUS;
 char server[] = "192.168.171.2";
@@ -54,16 +53,18 @@ void setup() {
 void loop() {
   read_response();
 
-  while (Serial.available() > 0) {
-    buffer[index++] = Serial.read();
-    if (index >= chunkSize) {
-      buffer[index] = '\0';
-      chunk = String(buffer);
-      index = 0;                   
+  if(Serial.available()>0){
+    while (Serial.available() > 0) {
+      buffer[index++] = Serial.read();
+      if (index >= chunkSize) {
+        buffer[index] = '\0';
+        chunk = String(buffer);
+        index = 0;                   
+      }
     }
-  }
-  if (wifiClient.connected()) {
-    wifiClient.println(chunk);
+    if (wifiClient.connected()) {
+      wifiClient.println(chunk);
+    }
   }
 
 

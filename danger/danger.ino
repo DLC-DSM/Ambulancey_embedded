@@ -3,17 +3,22 @@
 #include "VoiceRecognitionV3.h"
 #include <SoftwareSerial.h>
 
+#define TEMP_CORRECTION 13
+
 const int PulseWire = 0;
 const int LED13 = 13;
 int Threshold = 550;
+
+unsigned long previousMillis = 0;
+const int times = 1;//초 설정
 
 int value;
 int tmp_sensor = A1;
 float voltage;
 float temperatureC;
 
-bool yes_or_no;
 bool danger = false;
+bool problem = false;
 
 char speaker[1];
 
@@ -26,6 +31,7 @@ PulseSensorPlayground pulseSensor;
 void setup() {
   Serial.begin(9600);
   myVR.begin(9600);
+  SpeakerInstruct.begin(9600);
 
   pulseSensor.analogInput(PulseWire);   
   pulseSensor.blinkOnPulse(LED13);       
@@ -39,17 +45,34 @@ void setup() {
 }
 
 void loop() {
+  unsigned long currentMillis = millis();
+
   if(Serial.available()>0){
     char reads = Serial.read();
-    if(reads == '1'){
-      danger == true;
+    if(reads == 'E'){
+      danger = true;
+    }
+    SpeakerInstruct.write('t');
+    int ret;
+    buf[1] = -1; // 초기화
+    while (millis() - currentMillis < 10000) {//10 초간 대답 돌아오길 기다리기
+      ret = myVR.recognize(buf, 50);
+      if(ret > 0 && buf[1] != -1){
+        break;
+      }
+    }
+
+    if(buf[1] == -1){// 사용자가 문제가 생긴 경우
+      speaker[0] = 'D';
+      SpeakerInstruct.write(speaker);
+      speaker[0] = '0';
     }
   }
-  if(millis()%1000==0){
+  if(currentMillis - previousMillis >= 1000*times){
     value = analogRead(tmp_sensor); // 체온 체크
     voltage = value * 5.0 / 1023.0;
     temperatureC = voltage / 0.01;
-    temperatureC -= 13;
+    temperatureC -= TEMP_CORRECTION;
 
     int myBPM = pulseSensor.getBeatsPerMinute();
 
@@ -62,39 +85,44 @@ void loop() {
     Serial.print("temperature :");
     Serial.print(temperatureC);
     Serial.println("C");
-    String send_temperatureC = (String(temperatureC).length()<5)? (String(temperatureC).length()<4) ? "00" + String(temperatureC): "0" + String(temperatureC): String(temperatureC);
-    String send_BPM = (String(myBPM).length()<3)? (String(myBPM).length()<2) ? "00" + String(myBPM): "0" + String(myBPM): String(myBPM);
+
+    String send_temperatureC = String(temperatureC, 1).padStart(6, '0');
+    String send_BPM = String(myBPM).padStart(3, '0');
     String send_data = send_BPM + " " + send_temperatureC;
     sendInChunks(send_data);
+
+    previousMillis = currentMillis;
   }
   int ret = myVR.recognize(buf, 50);
   if(ret>0){
     switch(buf[1]){
-      case (0)://도와줘
-        speaker[0] = 'h';
-        break;
-      case (1)://살려줘
-        speaker[0] = 'f';
-        break;
-      case (2)://구해줘
-        speaker[0] = 'w';
+      case (0): // 도와줘
+      case (1): // 살려줘
+      case (2): // 구해줘
+      case (5): // 아파
+        problem = true;
+        speaker[0] = (buf[1] == 0) ? 'h' :
+                    (buf[1] == 1) ? 'f' :
+                    (buf[1] == 2) ? 'w' : 's';
         break;
       case (3)://어
-        yes_or_no = true;
-        speaker[0] = 'y';
+        if(problem == true){
+          speaker[0] = 'D';
+        }
+        else{
+          speaker[0] = '0';
+        }
         break;
       case (4)://아니
-        yes_or_no = false;
-        speaker[0] = 'n';
-        break;
-      case (5)://아파
-        speaker[0] = 's';
+        problem = false;
+        speaker[0] = '0';
         break;
     }
-    SpeakerInstruct.write(speaker);
-    Serial.println(speaker);
+    if(speaker[0] !='0'){
+      SpeakerInstruct.write(speaker);
+      Serial.println(speaker);
+    }
   }
-  delay(1000);
 }
 
 void sendInChunks(String data) {
@@ -112,3 +140,9 @@ void sendInChunks(String data) {
   }
 }
 
+String padStart(String input, int targetLength, char padChar = '0') {
+  while (input.length() < targetLength) {
+    input = padChar + input;
+  }
+  return input;
+}
